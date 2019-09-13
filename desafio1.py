@@ -8,7 +8,7 @@ Created on Fri Aug 30 19:12:16 2019
 #blibliotecas uteis do python padans e numpy as é uma maneira de abreviar, agora pra chamar a bliblioteca chamano pela abreviação
 
 
-import pandas as pd
+#import pandas as pd
 import random 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -25,7 +25,6 @@ tax_mount = (1+tax/100)**(1/12) -1
 print('Sua taxa desse contrato é de 9% ao ano e ao mês é: {}'.format(tax_mount))
 nparcelas = 360
 tabela = []
-X = []
 cont_reajusteimovel = 0
 cont_reajustealuguel = 0
 EvoImovel = ['500000']
@@ -34,6 +33,8 @@ EvoPatrimonio = [entrada]
 Somatorio = entrada
 patrimonio = entrada
 aluguel = 1800.00
+To_Aluguel = 0
+variaveis = []
 #Distribuições
 #VIM = VALORIZAÇÂO DO IMOVEL
 distribuicaoVIM = np.random.triangular(1,2,4,50000)
@@ -68,9 +69,6 @@ for i in range (0, nparcelas+1):
         Rendimento = Somatorio
         EvoInvestimento.append(Rendimentos)
         
-        patrimonio = patrimonio + a
-        EvoPatrimonio.append(patrimonio)
-        
         #controle de tempo 
         cont_reajusteimovel = cont_reajusteimovel +1
         cont_reajustealuguel = cont_reajustealuguel +1
@@ -87,32 +85,48 @@ for i in range (0, nparcelas+1):
             indVIM = int(random.randint(0,50000))
             novo_Vimovel = round((distribuicaoVIM[indVIM]/100)*novo_Vimovel + novo_Vimovel,2)
             ganho = novo_Vimovel - valor_imovel
-            EvoImovel.append(novo_Vimovel)
             print("Com a taxa de juros de: {:.2f}".format(distribuicaoVIM[indVIM]))
             print("Agora o valor do imovel é: {:.2f}\n Seu ganho foi: {:.2f}".format(novo_Vimovel, ganho))
             cont_reajusteimovel = 0
             patrimonio = patrimonio + ((distribuicaoVIM[indVIM]/100)*novo_Vimovel)
-            
-            
+        
+        EvoImovel.append(novo_Vimovel)
+        patrimonio = patrimonio + a
+        EvoPatrimonio.append(patrimonio)
+        To_Aluguel = aluguel + To_Aluguel
         variaveis = [i, Pmt, a, j, sd]
     
     print(variaveis)
     tabela.append(variaveis)
-    X.append(i)
+
 #transformando a lista em matriz 
 tabela  = np.array(tabela)
 
 #colocando colunas na matriz 
-tabela = pd.DataFrame(tabela, columns = ['Periodo', 'Prestação', 'amortização', 'juros', 'Saldo devedor'])
+#tabela = pd.DataFrame(tabela, columns = ['Periodo', 'Prestação', 'amortização', 'juros', 'Saldo devedor'])
 
 print('\n')
 
 
 #gerando o arquivo em excel 
-tabela.to_excel('amortização de emprestimo.xlsx', index = False)
-   
+#tabela.to_excel('amortização de emprestimo.xlsx', index = False)
 
-r = np.arange(0,360,1)
+###Analisando
+print('o rendimento do investimento total é {:.2f}'.format(Rendimentos))
+
+print('o valor total pago em aluguel é {:.2f}'.format(To_Aluguel))
+
+print('o valor total do imovel é {:.2f}'.format(novo_Vimovel))
+
+print('o valor total pago no financiamento é {:.2f}'.format(Pmt*360))
+
+print('A diferença entre o Valor pago de financiamento e o imovel é {}'.format(novo_Vimovel - (Pmt*360)))
+
+print('A diferença entre o valor pago de aluguel e o rendimento é {:.2f}'.format(To_Aluguel - Rendimentos))
+
+print("A porcentagem do ganho em cima do rendimento é {:.2f}%".format((Rendimentos/To_Aluguel)*100))
+print("A porcentagem do ganho em cima do rendimento é {:.2f}%".format((novo_Vimovel/(Pmt*360)*100)))
+
 plt.title('Valor do imovel no tempo')
 plt.plot(EvoImovel)
 plt.show()
@@ -126,10 +140,8 @@ plt.plot(EvoPatrimonio)
 plt.show()
 
 
-plt.title('Valor do Patrimonio X Investimento ')
-plt.plot(EvoPatrimonio)
-plt.plot(EvoInvestimento)
-plt.show()
+
+
 
 
 
