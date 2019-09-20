@@ -8,11 +8,11 @@ Created on Fri Aug 30 19:12:16 2019
 #blibliotecas uteis do python padans e numpy as é uma maneira de abreviar, agora pra chamar a bliblioteca chamano pela abreviação
 
 
-#import pandas as pd
+import pandas as pd
 import random 
 import numpy as np
 import matplotlib.pyplot as plt
-##import matplotlib.pyplot as plt
+
 
 
 #input de dados
@@ -32,19 +32,19 @@ EvoInvestimento = [entrada]
 EvoPatrimonio = [entrada]
 Somatorio = entrada
 patrimonio = entrada
-aluguel = 1800.00
+aluguel = 2200.00
 To_Aluguel = 0
 variaveis = []
+ganho = 0
 #Distribuições
 #VIM = VALORIZAÇÂO DO IMOVEL
-distribuicaoVIM = np.random.triangular(1,2,4,50000)
+distribuicaoVIM = np.random.triangular(1,6,8,50000)
 # SAF = SALDO APLICADO AO FUNDO 
-distribuicaoSAF = np.random.normal(1.1,0.5,50000)
+distribuicaoSAF = np.random.normal(0.4,0.15,50000)
 
-distribuicaoAL = np.random.triangular(-1,2,4,50000)
+distribuicaoAL = np.random.triangular(1,2,4,50000)
 
-
-
+distribuicaoTR = np.random.normal(0.1, 0.05,50000)
 
 
 
@@ -53,79 +53,89 @@ for i in range (0, nparcelas+1):
     if i == 0:
         a, j, Pmt = 0, 0, 0
         sd = valor_finan
+        a2, j2, Pmt2 = 0, 0, 0
+        sd2 = sd
+        trAcumulada = 0
 #outras linhas da tabela de amortização 
     else:
         ##Construindo a tebela de amortização
         Pmt = round((valor_finan/((1-(1+tax_mount)**-nparcelas)/tax_mount)),2)
         j = round(sd*tax_mount,2)
         a = round(Pmt - j,2)
-        sd = round(sd - a,2) 
-        #calculando investimento 
-        DifInvestida = Pmt - aluguel
-        Somatorio = DifInvestida + Somatorio
+        sd = round(sd - a,2)
+        #sorteando numero de indicie para pegar numeros na distribuicao
+        ind = int(random.randint(0,50000))
         
-        indSAF = int(random.randint(0,50000))
-        Rendimentos = round((distribuicaoSAF[indSAF]/100)*Somatorio + Somatorio,2)
-        Rendimento = Somatorio
+        
+        tr = round(distribuicaoTR[ind],2)
+        trAcumulada = round(trAcumulada + tr,2)
+        x = (8/100 + trAcumulada) + 1 
+        
+        a2= round(a * x,2)       
+        j2= round(j * x ,2)
+        Pmt2= round(Pmt * x,2)
+        sd2= round(sd * x,2)
+        
+        
+        #calculando investimento 
+              
+        Somatorio = (Pmt - aluguel) + Somatorio
+        Rendimentos = round(((distribuicaoSAF[ind]/100)+1)*Somatorio,2)
         EvoInvestimento.append(Rendimentos)
+        Somatorio = Rendimentos 
         
         #controle de tempo 
         cont_reajusteimovel = cont_reajusteimovel +1
         cont_reajustealuguel = cont_reajustealuguel +1
         
         if cont_reajustealuguel == 24:
-            ind = int(random.randint(0,50000))
             novo_aluguel = round((distribuicaoAL[ind]/100)*aluguel + aluguel,2)
-            print("Com a taxa de juros de: {:.2f}".format(distribuicaoAL[ind]))
-            print("Agora o valor do aluguel é: {:.2f}".format(novo_aluguel))
             aluguel = novo_aluguel
             cont_reajustealuguel = 0
+            
+            
+            
         ##calculando o preço do imovel 
-        if cont_reajusteimovel == 36:
-            indVIM = int(random.randint(0,50000))
-            novo_Vimovel = round((distribuicaoVIM[indVIM]/100)*novo_Vimovel + novo_Vimovel,2)
+        if cont_reajusteimovel == 12:
+            novo_Vimovel = round((distribuicaoVIM[ind]/100)*valor_imovel + valor_imovel,2)
             ganho = novo_Vimovel - valor_imovel
-            print("Com a taxa de juros de: {:.2f}".format(distribuicaoVIM[indVIM]))
-            print("Agora o valor do imovel é: {:.2f}\n Seu ganho foi: {:.2f}".format(novo_Vimovel, ganho))
+            patrimonio = patrimonio + ganho
+            valor_imovel = novo_Vimovel
             cont_reajusteimovel = 0
-            patrimonio = patrimonio + ((distribuicaoVIM[indVIM]/100)*novo_Vimovel)
-        
+               
+               
         EvoImovel.append(novo_Vimovel)
         patrimonio = patrimonio + a
         EvoPatrimonio.append(patrimonio)
         To_Aluguel = aluguel + To_Aluguel
-        variaveis = [i, Pmt, a, j, sd]
+        
+    variaveis = [i, Pmt, a, j, sd, tr, trAcumulada, Pmt2, a2, j2, sd2]
     
     print(variaveis)
+    print(aluguel)
+    
     tabela.append(variaveis)
+    
+    plt.title('PATRIMONIO X INVESTIMENTO')
+    plt.plot(EvoInvestimento)
+    plt.plot(EvoPatrimonio)
+    plt.show()
 
 #transformando a lista em matriz 
 tabela  = np.array(tabela)
 
 #colocando colunas na matriz 
-#tabela = pd.DataFrame(tabela, columns = ['Periodo', 'Prestação', 'amortização', 'juros', 'Saldo devedor'])
+
+tabela = pd.DataFrame(tabela, columns = ['Periodo', 'Prestação', 'amortização', 'juros', 'Saldo-devedor', 'Taxa de referencia', 'Taxa de referencia acumulada', 'Prestacao corrigida', 'Amortizacao Corrigida', 'Juros corrigido', 'Saldo Devedor corrigido'])
 
 print('\n')
 
 
 #gerando o arquivo em excel 
-#tabela.to_excel('amortização de emprestimo.xlsx', index = False)
+tabela.to_csv ('amortização de emprestimo.xsl', index = False)
 
 ###Analisando
-print('o rendimento do investimento total é {:.2f}'.format(Rendimentos))
 
-print('o valor total pago em aluguel é {:.2f}'.format(To_Aluguel))
-
-print('o valor total do imovel é {:.2f}'.format(novo_Vimovel))
-
-print('o valor total pago no financiamento é {:.2f}'.format(Pmt*360))
-
-print('A diferença entre o Valor pago de financiamento e o imovel é {}'.format(novo_Vimovel - (Pmt*360)))
-
-print('A diferença entre o valor pago de aluguel e o rendimento é {:.2f}'.format(To_Aluguel - Rendimentos))
-
-print("A porcentagem do ganho em cima do rendimento é {:.2f}%".format((Rendimentos/To_Aluguel)*100))
-print("A porcentagem do ganho em cima do rendimento é {:.2f}%".format((novo_Vimovel/(Pmt*360)*100)))
 
 plt.title('Valor do imovel no tempo')
 plt.plot(EvoImovel)
@@ -138,6 +148,10 @@ plt.show()
 plt.title('Valor Investimento no tempo')
 plt.plot(EvoPatrimonio)
 plt.show()
+
+print(patrimonio)
+print(Rendimentos)
+
 
 
 
