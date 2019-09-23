@@ -1,0 +1,28 @@
+def media (lista):
+    a = 0
+    for x in lista:
+        a += x 
+    a /= len(lista)
+    
+    return a
+
+def mediana(lista):
+    r = 0
+    listaOrdenada = lista
+    listaOrdenada.sort()
+    if len(listaOrdenada) % 2 == 0:
+        b = int(len(listaOrdenada)/2)
+        r = (listaOrdenada[b -1]+ listaOrdenada[b])/2
+    else:
+       b = int(len(listaOrdenada)+1)/2
+       r = (listaOrdenada[b-1])
+    return r
+    
+lista = [int (x) for x in input('digite uma sequencia numerica').strip().split()]
+
+r = 0 
+
+print("Sua media e {}".format(media(lista)))
+  
+  
+print("Sua mediana e {}".format(mediana(lista)))
