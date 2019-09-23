@@ -1,0 +1,17 @@
+#abrindo um arquivo
+arquivo = open("aula2.txt", "r")
+saldo = 0
+
+#transforma cada linha em um lista
+for linha in arquivo:
+    data = linha.split()
+#pega o segundo indice da lista que e o tipo da operaçao 
+    if data[1] == "D":
+        saldo += float(data[2])
+    else:
+        saldo -= float(data[2])
+        
+print(saldo)
+arquivo.close()
+
+#banco de dados feito pelo professor do curso disnivel no drive https://drive.google.com/drive/folders/1aFTTYmhGQ9YysA65ylMfpDpi7U9_1frl
