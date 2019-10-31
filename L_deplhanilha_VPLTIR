@@ -1,0 +1,145 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Fri Oct  4 19:32:35 2019
+
+@author: pepe8
+"""
+
+'''
+Premicas Residual (uniforme) = min 400k max 700k
+Inv inicial normal (media 3000000, desvio padrao 300000) min = 2000
+receita triangular ( 0,8 1 1.3)
+receita triangular (0. 1 . 1,40)
+Tma = (uniforme) min = 7% max 12%
+numero de simulações 100000
+gerar histogramas 
+'''
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+
+#Gerando indicies de correção
+
+num_sim = 50000
+
+rec1 = np.random.triangular(0.8, 1, 1.30 ,num_sim)
+rec2 = np.random.triangular(0.8, 1, 1.30 ,num_sim)
+rec3 = np.random.triangular(0.8, 1, 1.30 ,num_sim)
+rec4 = np.random.triangular(0.8, 1, 1.30 ,num_sim)
+rec5 = np.random.triangular(0.8, 1, 1.30 ,num_sim)
+
+gast1 = np.random.triangular(0.7, 1, 1.40 ,num_sim)
+gast2 = np.random.triangular(0.7, 1, 1.40 ,num_sim)
+gast3 = np.random.triangular(0.7, 1, 1.40 ,num_sim)
+gast4 = np.random.triangular(0.7, 1, 1.40 ,num_sim)
+gast5 = np.random.triangular(0.7, 1, 1.40 ,num_sim)
+
+DInicial = np.random.normal(3000000,300000,num_sim)
+
+Dtma = np.random.uniform(7,12,num_sim)
+Dresidual = np.random.normal(400000, 700000,num_sim)
+
+#Pegando dados na planilha 
+planilha = pd.ExcelFile("Pasta1.xlsx")
+receita = pd.read_excel(planilha, 'Receita')
+despesa = pd.read_excel(planilha, 'Despesa')
+InvestimentoInicial = pd.read_excel(planilha, 'Investimento inicial')
+projetos = list(receita.columns)
+
+#variaveis
+cont = 0
+tempo = 1
+vlp= 0.0
+tir = 0
+Fluxo = []
+tabela = []
+TodosVpls = []
+TodosPBD = []
+TodosPB = []
+TodosTIR = []
+
+#for muito louco
+for g in range(0,num_sim):
+    CorrigeReceita = [rec1[g],rec2[g],rec3[g],rec4[g],rec5[g]]
+    CorrigeDespesa = [gast1[g],gast2[g],gast3[g],gast4[g],gast5[g]]
+    CorrigeDIinicial = DInicial[g]
+    Dtma1 = (Dtma[g]/100)
+    
+    
+
+    
+    if CorrigeDIinicial < 2000000:
+        CorrigeDIinicial = 2000000
+    
+
+    for i in range(1,2):
+        print(g)
+        pay = float(CorrigeDIinicial)
+        Fluxo = list((receita[projetos[i]] * CorrigeReceita ) - (despesa[projetos[i]]*CorrigeDespesa))
+        Fluxo[len(receita)-1] = Fluxo[len(receita)-1] + Dresidual[g]        
+        tempo = 0
+        cont = 0
+        for x in Fluxo:
+            if pay > 0 and pay >= x:
+                pay -= x
+                cont += 1
+
+            elif pay < x and pay > 0:
+                pay = pay - pay
+                cont += round(((pay/x)*12)/10,2)
+            
+        print("Payback Simples do {} {} anos\n".format(projetos[i],cont))
+          
+        pay = float( CorrigeDIinicial)
+      
+        cont2 = 0
+        
+        for x in Fluxo:
+            Idescontado = x/(1+Dtma1)**tempo
+            if pay > 0 and pay >= x:
+                pay -= Idescontado
+                cont2 += 1            
+            elif pay < x and pay > 0:
+                pay = pay - pay
+                cont2 += round(((pay/Idescontado)*12)/10,2)
+            tempo += 1   
+        print("Payback descontado do {} {} anos\n".format(projetos[i],cont2))
+        
+        
+        Fluxo.insert(0, -CorrigeDIinicial)
+        vpl = round(np.npv(Dtma1,Fluxo),2)
+        
+        print("O VPL é do {} é {}\n".format(projetos[i],vpl))
+        
+        tir = round(np.irr(Fluxo)*100,3)
+        print("O TIR é do {} é {}\n".format(projetos[i],tir))
+
+        tempo = 1
+        TodosPBD.append(cont2)
+        TodosPB.append(cont)
+        TodosTIR.append(tir)
+        TodosVpls.append(vpl)
+        
+        DATA = [vpl, tir, cont, cont2]
+        tabela.append(DATA)
+        
+        vpl = 0
+tabela  = np.array(tabela)
+tabela = pd.DataFrame(tabela, columns = ['VPL', 'TIR', 'PAYBACK', 'PAYBACK DESCONTADO'])
+
+plt.title('Curvas de vpl')
+plt.hist(TodosVpls)
+plt.show()
+
+'''
+plt.title('TAXA INTERNA DE RETORNO')
+plt.hist(TodosTIR)
+plt.show()
+'''
+plt.title('PAYBACK')
+plt.hist(TodosPB)
+plt.show()
+
+plt.title('PAYBACK DESCONTADO')
+plt.hist(TodosPBD)
+plt.show()
